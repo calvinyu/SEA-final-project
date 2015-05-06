@@ -1,37 +1,52 @@
 # SEA-final-project
 Building up movie seach engine plus customized recommendation system
 
-#Constants files:
+# /constants
+
+Could be empty, but since Rotten Tomato API has usage limit per day, we suggest not to run the crawler everytime. <br>
+[After crawler](https://www.dropbox.com/sh/xalfjcriwi454jk/AAAMobUvhL6ACebRardmkVDla?dl=0)
+
+With files in following link, you can fire up the server immediately <br>
+[Ready to serve](https://www.dropbox.com/sh/vln8xpvd6toerve/AAAg_GMUa_u12YbjVrUoCkyKa?dl=0)
+
+backup <br>
 [google drive](https://drive.google.com/folderview?id=0BzG5zLRRrgKwfkFPVHE5ZUZ2WGVZM28wUXZqUzU5WmhuZ3ZFdURTMzNYNzJNeVN2T1dGWWM&usp=sharing)
 
+# Run 
 
-# Working Procedure
+## 0. Run crawler
 
 ## 1. Split data into many partitions
 ```
-#Note, the num of partitions should corresping to the num of backend works
-#Default: (NumSuperFront, NumMaster, NumMovie, NumReview, NumIdx, NumDoc)= (1, 3, 3, 3, 3, 3)
 python -m src.reformatter <# of partitions for review> <# of partitions for movie>
 python -m src.reformatter 4 5 
 ```
-## 2. call prework workers
+## 2. Call prework workers
 ```
 python -m PreworkWorkers
 ```
-## 4.prepare pickle files for all servers 
+## 3. Prepare pickle for servers
 ```
 python -m Prepare
-```
-##5 Start All the works
 
+# Note, the num of partitions should corresping to the num of backend works
+# Default: (NumSuperFront, NumMaster, NumMovie, NumReview, NumIdx, NumDoc)= (1, 3, 3, 3, 3, 3)
+```
+## 4. Start All the works
 Goal: 1. find ports, 2. fire up all servers
 ```
 python ./StartAll.py
 ```
-## 6. Fire up frontend (google app engine)
-https://cloud.google.com/sdk/#Quick_Start
+## 5. Fire up frontend
+Need to install Google App Engine SDK first: https://cloud.google.com/sdk/#Quick_Start
 ```
 dev_appserver.py --host=localhost --port=8080 frontend
+# then the frontend server runs at port 8080
+```
+## 6. Try it (in browser)
+following the above example
+```
+http://127.0.0.1:8080/erver.py --host=localhost --port=8080 frontend
 ```
 
 #Structure:
