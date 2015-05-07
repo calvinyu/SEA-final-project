@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Sea-final-project by calvinyu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Sea-final-project</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.com/calvinyu/SEA-final-project" class="btn">View on GitHub</a>
+      <a href="https://github.com/calvinyu/SEA-final-project/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/calvinyu/SEA-final-project/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="sea-final-project" class="anchor" href="#sea-final-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>SEA-final-project</h1>
+
+<p>Building up movie seach engine plus customized recommendation system</p>
+
+<h1>
+<a id="constants" class="anchor" href="#constants" aria-hidden="true"><span class="octicon octicon-link"></span></a>/constants</h1>
+
+<p>Could be empty, but since Rotten Tomato API has usage limit per day, we suggest not to run the crawler everytime. <br>
+<a href="https://www.dropbox.com/sh/xalfjcriwi454jk/AAAMobUvhL6ACebRardmkVDla?dl=0">After crawler</a></p>
+
+<p>With files in following link, you can fire up the server immediately <br>
+<a href="https://www.dropbox.com/sh/vln8xpvd6toerve/AAAg_GMUa_u12YbjVrUoCkyKa?dl=0">Ready to serve</a></p>
+
+<p>backup <br>
+<a href="https://drive.google.com/folderview?id=0BzG5zLRRrgKwfkFPVHE5ZUZ2WGVZM28wUXZqUzU5WmhuZ3ZFdURTMzNYNzJNeVN2T1dGWWM&amp;usp=sharing">google drive</a></p>
+
+<h1>
+<a id="run" class="anchor" href="#run" aria-hidden="true"><span class="octicon octicon-link"></span></a>Run</h1>
+
+<h2>
+<a id="0-run-crawler" class="anchor" href="#0-run-crawler" aria-hidden="true"><span class="octicon octicon-link"></span></a>0. Run crawler</h2>
+
+<h2>
+<a id="1-split-data-into-many-partitions" class="anchor" href="#1-split-data-into-many-partitions" aria-hidden="true"><span class="octicon octicon-link"></span></a>1. Split data into many partitions</h2>
+
+<pre><code>python -m src.reformatter &lt;# of partitions for review&gt; &lt;# of partitions for movie&gt;
+python -m src.reformatter 4 5 
+</code></pre>
+
+<h2>
+<a id="2-call-prework-workers" class="anchor" href="#2-call-prework-workers" aria-hidden="true"><span class="octicon octicon-link"></span></a>2. Call prework workers</h2>
+
+<pre><code>python -m PreworkWorkers
+</code></pre>
+
+<h2>
+<a id="3-spin-up-fs-system" class="anchor" href="#3-spin-up-fs-system" aria-hidden="true"><span class="octicon octicon-link"></span></a>3. Spin up fs system</h2>
+
+<pre><code>python -m fsStart
+</code></pre>
+
+<h2>
+<a id="4-prepare-data-for-servers" class="anchor" href="#4-prepare-data-for-servers" aria-hidden="true"><span class="octicon octicon-link"></span></a>4. Prepare data for servers</h2>
+
+<pre><code>python -m PrepareFS
+
+# Note, the num of partitions should corresping to the num of backend works
+# Default: (NumSuperFront, NumMaster, NumMovie, NumReview, NumIdx, NumDoc)= (1, 3, 3, 3, 3, 3)
+</code></pre>
+
+<h2>
+<a id="5-start-all-the-works" class="anchor" href="#5-start-all-the-works" aria-hidden="true"><span class="octicon octicon-link"></span></a>5. Start All the works</h2>
+
+<p>Goal: 1. find ports, 2. fire up all servers</p>
+
+<pre><code>python ./StartAll.py
+</code></pre>
+
+<h2>
+<a id="6-fire-up-frontend" class="anchor" href="#6-fire-up-frontend" aria-hidden="true"><span class="octicon octicon-link"></span></a>6. Fire up frontend</h2>
+
+<p>Need to install Google App Engine SDK first: <a href="https://cloud.google.com/sdk/#Quick_Start">https://cloud.google.com/sdk/#Quick_Start</a></p>
+
+<pre><code>dev_appserver.py --host=localhost --port=8080 frontend
+# then the frontend server runs at port 8080
+</code></pre>
+
+<h2>
+<a id="7-try-it-in-browser" class="anchor" href="#7-try-it-in-browser" aria-hidden="true"><span class="octicon octicon-link"></span></a>7. Try it (in browser)</h2>
+
+<p>following the above example</p>
+
+<pre><code>http://127.0.0.1:8080/
+</code></pre>
+
+<h1>
+<a id="structure" class="anchor" href="#structure" aria-hidden="true"><span class="octicon octicon-link"></span></a>Structure:</h1>
+
+<p>The structure of fired-uped HTTP servers are:</p>
+
+<pre><code>                        --&gt; classifier_front(?)   --&gt; ?
+User --&gt; SuperFront     --&gt; searchEng_front       --&gt; searchEng_worker (inclusing IndexServer*3, and DocumentServer*3)
+                        --&gt; recom_front           --&gt; recom_worker (inclusing MovieServer*3, and ReviewServer*3)
+</code></pre>
+
+<h1>
+<a id="recommendation-system" class="anchor" href="#recommendation-system" aria-hidden="true"><span class="octicon octicon-link"></span></a>Recommendation System:</h1>
+
+<h3>
+<a id="goal-getting-the-user-id----check-user-log-to-get-review-history----check-movieserver-to-get-similar-critics----check-reviewserver-to-get-movies-sorted-by-weighted-rating" class="anchor" href="#goal-getting-the-user-id----check-user-log-to-get-review-history----check-movieserver-to-get-similar-critics----check-reviewserver-to-get-movies-sorted-by-weighted-rating" aria-hidden="true"><span class="octicon octicon-link"></span></a>Goal: getting the user ID --&gt; check user log to get review history --&gt; check MovieServer to get similar critics --&gt; check ReviewServer to get movies sorted by weighted rating</h3>
+
+<h3>
+<a id="stucture-and-usage" class="anchor" href="#stucture-and-usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stucture and Usage:</h3>
+
+<pre><code>recom_front --&gt; MovieServer*3
+            --&gt; ReviewServer*3
+
+#recom_front api: 
+#http://linserv2.cims.nyu.edu:46829/recom?user=UserID (e.g. http://linserv2.cims.nyu.edu:46829/recom?user=d0aa6e9b-676b-428f-9758-65e7c09b38a4)
+
+#MovieServer api:
+# http://linserv2.cims.nyu.edu:46831/movie?movieID=MovieIDs (e.g. http://linserv2.cims.nyu.edu:46831/movie?movieID=770802394+770882996+12900+13217+11705+770876740+770710325+771362322+533693794+348462568)
+
+#ReviewServer api:
+#http://linserv2.cims.nyu.edu:46834/review?critics=CRITICS (e.g. http://linserv2.cims.nyu.edu:46834/review?critics=Emanuel_Levy+Roger_Ebert)
+</code></pre>
+
+<p>Current UserLog is created by:</p>
+
+<pre><code>python ./src/createFakeUserLog.py
+
+#So it will create 20 reviews per user with random scoring on random movie. Total for 50 users with unique ID created.  
+#saved at ../userLog/myUserBook
+</code></pre>
+
+<h1>
+<a id="tomatocrawler" class="anchor" href="#tomatocrawler" aria-hidden="true"><span class="octicon octicon-link"></span></a>TomatoCrawler</h1>
+
+<h2>
+<a id="goal-to-fetch-rotten-tomato-website-and-save-the-info-properly" class="anchor" href="#goal-to-fetch-rotten-tomato-website-and-save-the-info-properly" aria-hidden="true"><span class="octicon octicon-link"></span></a>Goal: to fetch rotten tomato website and save the info properly</h2>
+
+<p>Now we have:</p>
+
+<ul>
+<li>250 movie to search</li>
+<li>1718 movieIDs returned</li>
+</ul>
+
+<div class="highlight highlight-python"><pre><span class="pl-c">#If you like tomatoCrawler to save Movie_fs, Review_fs, and IDs_fs to file system</span>
+<span class="pl-k">from</span> src <span class="pl-k">import</span> tomatoCrawler
+tomatoCrawler.main2FS()
+
+<span class="pl-c">#Or! just ask tomatoCrawler to save Movie_dict, Review_fs, and IDs_fs to ./constants as pickle files</span>
+tomatoCrawler.main2NormalDict()</pre></div>
+
+<h1>
+<a id="file-system-module-usage" class="anchor" href="#file-system-module-usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>File System module Usage</h1>
+
+<h2>
+<a id="distributed-dictionary-object" class="anchor" href="#distributed-dictionary-object" aria-hidden="true"><span class="octicon octicon-link"></span></a>Distributed dictionary object</h2>
+
+<div class="highlight highlight-python"><pre><span class="pl-k">from</span> fs <span class="pl-k">import</span> DisTable
+
+<span class="pl-c">#Creating an object</span>
+a <span class="pl-k">=</span> DisTable()
+<span class="pl-c"># or</span>
+b <span class="pl-k">=</span> DisTable({ <span class="pl-c1">1</span>: <span class="pl-s"><span class="pl-pds">'</span>a<span class="pl-pds">'</span></span>, <span class="pl-c1">2</span>: <span class="pl-s"><span class="pl-pds">'</span>b<span class="pl-pds">'</span></span>, <span class="pl-c1">3</span>: <span class="pl-s"><span class="pl-pds">'</span>c<span class="pl-pds">'</span></span>})
+
+<span class="pl-c">#Set a key-value pair</span>
+a[<span class="pl-c1">1</span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>a<span class="pl-pds">'</span></span>
+a[<span class="pl-c1">2</span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>b<span class="pl-pds">'</span></span>
+<span class="pl-c">#Get a value with key</span>
+a[<span class="pl-c1">1</span>]
+<span class="pl-c">#returns 'a'</span>
+
+<span class="pl-c">#Pop operation</span>
+a.pop(<span class="pl-c1">1</span>)
+<span class="pl-c">#returns 'a' and remove (1, 'a') from dictionary</span>
+
+<span class="pl-c">#hasKey operation</span>
+a.hasKey(<span class="pl-c1">2</span>)
+<span class="pl-c">#returns True</span>
+a.hasKey(<span class="pl-c1">1</span>)
+<span class="pl-c">#returns False</span>
+
+<span class="pl-c">#Length property</span>
+a.length
+<span class="pl-c">#returns 1</span>
+
+<span class="pl-c">#Pretty print of dictionary</span>
+<span class="pl-k">print</span> a
+<span class="pl-c">#1</span>
+<span class="pl-c">#   a</span>
+<span class="pl-s"><span class="pl-pds">'''</span></span>
+<span class="pl-s">key1</span>
+<span class="pl-s">  value1</span>
+<span class="pl-s">  value2</span>
+<span class="pl-s">  ...</span>
+<span class="pl-s">key2</span>
+<span class="pl-s">  value1</span>
+<span class="pl-s">  value2</span>
+<span class="pl-s">  ...</span>
+<span class="pl-s"><span class="pl-pds">'''</span></span></pre></div>
+
+<h2>
+<a id="distributed-list" class="anchor" href="#distributed-list" aria-hidden="true"><span class="octicon octicon-link"></span></a>Distributed List</h2>
+
+<div class="highlight highlight-python"><pre><span class="pl-k">from</span> fs <span class="pl-k">import</span> DisList
+
+<span class="pl-c">#Creating an object</span>
+a <span class="pl-k">=</span> DisList()
+<span class="pl-c"># or</span>
+b <span class="pl-k">=</span> DisList([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>])
+
+<span class="pl-c">#Append/Extend a value into list</span>
+a.append(<span class="pl-c1">1</span>)
+a.append(<span class="pl-c1">2</span>)
+a.extend(<span class="pl-c1">3</span>)
+a.extend(<span class="pl-c1">4</span>)
+
+<span class="pl-c">#Get a value given position</span>
+a[<span class="pl-c1">0</span>]
+<span class="pl-c">#returns 1</span>
+a[<span class="pl-c1">1</span>]
+<span class="pl-c">#returns 2</span>
+
+<span class="pl-c">#Update value to given position</span>
+a[<span class="pl-c1">1</span>] <span class="pl-k">=</span> <span class="pl-c1">3</span>
+<span class="pl-k">print</span> a
+<span class="pl-c">#[ 1 3 3 4 ]</span>
+
+<span class="pl-c">#Remove value from list</span>
+a.remove(<span class="pl-c1">1</span>)
+<span class="pl-k">print</span> a
+<span class="pl-c">#[ 3 3 4 ]</span>
+a.remove(<span class="pl-c1">3</span>, <span class="pl-smi">globl</span><span class="pl-k">=</span><span class="pl-c1">True</span>)
+<span class="pl-k">print</span> a
+<span class="pl-c">#[ 4 ]</span>
+
+<span class="pl-c">#Pop operation</span>
+a.pop(<span class="pl-c1">1</span>)
+<span class="pl-c">#returns 'a' and remove (1, 'a') from dictionary</span>
+
+<span class="pl-c">#Length property</span>
+a.length
+<span class="pl-c">#returns 1</span></pre></div>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/calvinyu/SEA-final-project">Sea-final-project</a> is maintained by <a href="https://github.com/calvinyu">calvinyu</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
+
